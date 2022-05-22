@@ -1,0 +1,4 @@
+#!/bin/bash
+echo $1
+str="s/[0-9]\+/'$1'/g"
+seq 25 | xargs -l -- | sed $str | xargs -I {} python ./feature_extraction_dim_selection.py  {}

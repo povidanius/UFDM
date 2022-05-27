@@ -11,7 +11,7 @@ import dcor
 from kac_independence_measure import KacIndependenceMeasure
 from scipy.ndimage import gaussian_filter1d
 
-unbiassed = 1
+unbiassed = 0
 num_experiments = 20
 
 def get_y(proj_x, epsilon, fun_type):
@@ -48,7 +48,6 @@ def produce_plots(fun_type):
                 z_dep.append(data[1,:])         
                 #breakpoint()
                 if np.isnan(data[1,-1]):
-                    print("NAN")
                     print(file_name)
                     #breakpoint()
 

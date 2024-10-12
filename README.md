@@ -3,3 +3,5 @@ Acompanying code repository for [Measuring Statistical Dependencies via Maximum 
 
 The data for feature extraction experiments is downloaded automatically via OpenML API.
 The data for DNN regularization experiment can be downloaded from https://www.kaggle.com/datasets/hasnainjaved/melanoma-skin-cancer-dataset-of-10000-images (CC0: Public Domain license).
+
+during the Review period of MLJ (ECML PKDD 2025) submission, this code will be continuously updated (integration of missing experiments, code polishing, etc.)

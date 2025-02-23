@@ -12,7 +12,7 @@ from scipy.signal import medfilt as mf
 import os
 sys.path.insert(0, "../")
 
-from kac_independence_measure import KacIndependenceMeasure
+from ufdm import UFDM
 
 device = "cuda:0"
 
@@ -45,13 +45,13 @@ class LossGaussian(nn.Module):
         self.cov_xy = cov_xy.to(self.device)
 
     def forward(self, alpha, beta):
-        dimx = alpha.shape[0] 
+        dimx = alpha.shape[0]
         dimy = beta.shape[0]
 
         #a = alpha + 0.00001*torch.randn(alpha.shape).to(self.device) #/ (dimx*torch.norm(alpha))
         #b = beta + 0.00001*torch.randn(beta.shape).to(self.device) # / (dimy*torch.norm(beta))
 
-        a = alpha / (dimx*torch.norm(alpha))
+        a = alpha /  (dimx*torch.norm(alpha))
         b = beta / (dimy*torch.norm(beta))
 
         #print(f"{a} {b}")
@@ -120,14 +120,14 @@ def covariance_XY(Sigma_X, Sigma_E, W):
 
 if __name__ == "__main__":
     n_batch = 128
-    n = n_batch * 1000
+    n = n_batch * 100
     dim_x = 32
     dim_y = 32
     num_iter = 1000 
     input_proj_dim = 0 
-    lr = 0.005
+    lr = 0.01
 
-    model = KacIndependenceMeasure(dim_x, dim_y, lr=lr, input_projection_dim=input_proj_dim, weight_decay=0.00, device=device)
+    model = UFDM(dim_x, dim_y, lr=lr, input_projection_dim=input_proj_dim, weight_decay=0.000, device=device)
 
     cov_x = random_covariance_matrix(dim_x)
     cov_e = random_covariance_matrix(dim_y)
@@ -153,8 +153,8 @@ if __name__ == "__main__":
 
     plt.plot(history_gradient_estimator)
 
-    a = Variable(1.0 * torch.rand(dim_x, device=device) - 0.0, requires_grad=True).to(device)
-    b = Variable(1.0 * torch.rand(dim_y, device=device) - 0.0, requires_grad=True).to(device)
+    a = Variable(1.0 * torch.rand(dim_x, device=device) + 0.0, requires_grad=True).to(device)
+    b = Variable(1.0 * torch.rand(dim_y, device=device) + 0.0, requires_grad=True).to(device)
 
     history_gaussian_estimator = []
     loss_gaussian = LossGaussian(cov_x, cov_y, cov_xy)

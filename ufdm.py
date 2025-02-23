@@ -6,58 +6,10 @@ import itertools
 import numpy as np
 
 
-def cov(x, rowvar=False, bias=False, ddof=None, aweights=None):
-    """Estimates covariance matrix like numpy.cov"""
-    # ensure at least 2D
-    if x.dim() == 1:
-        x = x.view(-1, 1)
-
-    # treat each column as a data point, each row as a variable
-    if rowvar and x.shape[0] != 1:
-        x = x.t()
-
-    if ddof is None:
-        if bias == 0:
-            ddof = 1
-        else:
-            ddof = 0
-
-    w = aweights
-    if w is not None:
-        if not torch.is_tensor(w):
-            w = torch.tensor(w, dtype=torch.float)
-        w_sum = torch.sum(w)
-        avg = torch.sum(x * (w/w_sum)[:,None], 0)
-    else:
-        avg = torch.mean(x, 0)
-
-    # Determine the normalization
-    if w is None:
-        fact = x.shape[0] - ddof
-    elif ddof == 0:
-        fact = w_sum
-    elif aweights is None:
-        fact = w_sum - ddof
-    else:
-        fact = w_sum - ddof * torch.sum(w * w) / w_sum
-
-    xm = x.sub(avg.expand_as(x))
-
-    if w is None:
-        X_T = xm.t()
-    else:
-        X_T = torch.mm(torch.diag(w), xm).t()
-
-    c = torch.mm(X_T, xm)
-    c = c / fact
-
-    return c.squeeze()
-
-
-class KacIndependenceMeasure(nn.Module):
+class UFDM(nn.Module):
 
     def __init__(self, dim_x, dim_y, lr = 0.005,  input_projection_dim = 0, output_projection_dim=0, weight_decay=0.01, orthogonality_enforcer = 1.0, device="cpu", init_scale_shift=[1,0]):
-        super(KacIndependenceMeasure, self).__init__()
+        super(UFDM, self).__init__()
         self.dim_x = dim_x
         self.dim_y = dim_y
         self.lr = lr
@@ -67,6 +19,7 @@ class KacIndependenceMeasure(nn.Module):
         self.orthogonality_enforcer = orthogonality_enforcer
         self.device = device
         self.init_scale_shift = init_scale_shift
+        self.tanh =  torch.nn.Tanh()
         self.reset()
 
     def reset(self):
@@ -95,9 +48,6 @@ class KacIndependenceMeasure(nn.Module):
         
         self.optimizer = torch.optim.AdamW(param_list  + [self.a, self.b] + list(self.bnx.parameters()) + list(self.bny.parameters()), lr=self.lr, weight_decay=self.weight_decay) 
 
-        #self.a = self.a / torch.norm(self.a)
-        #self.b = self.b / torch.norm(self.b)
-   
 
     def project(self, x, normalize=True):
         x = x.to(self.device)
@@ -106,19 +56,6 @@ class KacIndependenceMeasure(nn.Module):
 
         proj = self.projection_x(x)            
         return proj
-
-    def smooth(self, x):
-        w = torch.linalg.norm(x, keepdim=True, dim=1)
-        w = torch.exp(-0.5 * torch.square(w))
-        #print(w)
-        #aa = torch.norm(self.a)
-        #bb = torch.norm(self.b)
-        #hn = x.shape[0] #*x.shape[0]
-        #C = cov(x)
-        #breakpoint()
-        #w = torch.exp(-0.05 * (aa*aa + bb*bb)/hn)
-        #print(w)
-        return w
 
 
     def forward(self, x, y, update = True, normalize=True):
@@ -136,58 +73,23 @@ class KacIndependenceMeasure(nn.Module):
 
 
         
-        #an = torch.Tensor([self.a.shape[0]])[0]
-        #bn = torch.Tensor([self.b.shape[0]])[0]
-        #xa = (x @ (self.a))
-        #yb = (y @ (self.b))
-        
-
-        n = x.shape[0]
-        #d = x.shape[]
-        
+       
         dimx = self.a.shape[0]
         dimy = self.b.shape[0]
-        xa = x @ (self.a/(dimx*torch.norm(self.a)))
-        yb = y @ (self.b/(dimy*torch.norm(self.b)))
+        xa = x @ self.a /  (dimx*torch.norm(self.a))
+        yb = y @ self.b/ (dimy*torch.norm(self.b))
 
-        #xa = x @ (self.a + 0.001*torch.randn(self.a.shape).to(self.device) )
-        #yb = y @ (self.b + 0.001*torch.randn(self.b.shape).to(self.device) )
+        #xa = x @ (self.a   / dimx)
+        #yb = y @ (self.b  / dimy)
+        #xa = xa / torch.norm(xa)
+        #yb = yb / torch.norm(yb)
 
-        """
-        tn = np.exp(np.power(1/n, 1.0)) #np.power(n / np.log(n), 0.5)/np.power(n, )
-        #print(tn)
-        xa = x @ (tn*self.a/torch.norm(self.a))
-        yb = y @ (tn*self.b/torch.norm(self.b))
-        """
-
-        
-
-        """
-        xy1 = torch.cat((x,y), axis=1)
-        x1 = self.smooth(x)
-        y1 = self.smooth(y)
-        xy1 = self.smooth(xy1)
-
-        if True:
-            xy1 = torch.ones_like(xy1)
-            x1 = torch.ones_like(x1)
-            y1 = torch.ones_like(y1)
-
-        fxy = (torch.exp(1j*(xa + yb))*(xy1)).mean()
-        fx = (torch.exp(1j*(xa))*(x1)).mean()
-        fy = (torch.exp(1j*(yb))*(y1)).mean()
-        f1 = fxy - fx*fy
-        """
-      
+     
         f1 = torch.exp(1j*(xa + yb)).mean() - torch.exp(1j*xa).mean() * torch.exp(1j*yb).mean()
-
-        #breakpoint()
-
-        kim = torch.norm(f1)
-        #print(kim - torch.abs(f1))
+        ufdm = torch.norm(f1)
 
         if update:
-            loss = -kim 
+            loss = -ufdm 
             if self.input_projection_dim > 0.0:
                 loss = loss + self.orthogonality_enforcer*torch.norm(torch.matmul(self.projection_x.weight,self.projection_x.weight.T) - torch.eye(self.input_projection_dim).to(self.device)) # maximise => negative
             
@@ -198,5 +100,5 @@ class KacIndependenceMeasure(nn.Module):
             loss.backward()
             self.optimizer.step()   
 
-        return kim
+        return ufdm
         

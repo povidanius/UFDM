@@ -74,15 +74,15 @@ class UFDM(nn.Module):
 
         
        
-        dimx = self.a.shape[0]
-        dimy = self.b.shape[0]
-        xa = x @ self.a /  (dimx*torch.norm(self.a))
-        yb = y @ self.b/ (dimy*torch.norm(self.b))
+        #dimx = np.sqrt(float(self.a.shape[0]))
+        #dimy = np.sqrt(float(self.b.shape[0]))
+        #xa = x @ self.a / dimx # /  (dimx*torch.norm(self.a))
+        #yb = y @ self.b /dimy #/ (dimy*torch.norm(self.b))
 
-        #xa = x @ (self.a   / dimx)
-        #yb = y @ (self.b  / dimy)
-        #xa = xa / torch.norm(xa)
-        #yb = yb / torch.norm(yb)
+        dimx = 1 # (float(self.a.shape[0]))
+        dimy = 1 # (float(self.b.shape[0]))
+        xa = x @ self.a /   (dimx*torch.norm(self.a))
+        yb = y @ self.b / (dimy*torch.norm(self.b))
 
      
         f1 = torch.exp(1j*(xa + yb)).mean() - torch.exp(1j*xa).mean() * torch.exp(1j*yb).mean()

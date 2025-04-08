@@ -54,6 +54,9 @@ class LossGaussian(nn.Module):
         a = alpha /  (dimx*torch.norm(alpha))
         b = beta / (dimy*torch.norm(beta))
 
+        #a = alpha /  np.sqrt(dimx)
+        #b = beta /  np.sqrt(dimy)
+
         #print(f"{a} {b}")
 
         aSxxa = torch.matmul(torch.matmul(a.t(), self.cov_xx), a)
@@ -79,6 +82,29 @@ def random_covariance_matrix(d):
     A = torch.randn(d, d)  # Generate a random matrix A of shape (d, d)
     cov_matrix = torch.mm(A, A.t())  # Create positive semi-definite matrix by multiplying A with its transpose
     return cov_matrix
+
+def sample_ith_batch(X, Y, batch_size, i):
+    """
+    Sample the ith batch from datasets X and Y.
+    
+    Parameters:
+    - X (torch.Tensor): Input dataset.
+    - Y (torch.Tensor): Target dataset.
+    - batch_size (int): Number of samples in the batch.
+    - i (int): Index of the batch (0-based index).
+    
+    Returns:
+    - Batch from X and Y corresponding to the ith batch.
+    """
+    n = X.shape[0]  # Total number of rows in the dataset
+    start_idx = (i * batch_size) % n  # Compute start index, wrapping around if necessary
+    end_idx = min(start_idx + batch_size, n)  # Compute end index
+    
+    if end_idx > start_idx:
+        return X[start_idx:end_idx], Y[start_idx:end_idx]
+    else:
+        # If the batch wraps around the dataset
+        return torch.cat((X[start_idx:], X[:end_idx])), torch.cat((Y[start_idx:], Y[:end_idx]))
 
 def sample_random_batch(X, Y, batch_size):
     """
@@ -119,15 +145,19 @@ def covariance_XY(Sigma_X, Sigma_E, W):
     return torch.from_numpy(Sigma_X_W), torch.from_numpy(WT_Sigma_X_W + Sigma_E)
 
 if __name__ == "__main__":
-    n_batch = 128
+    n_batch = 1024
     n = n_batch * 100
     dim_x = 32
     dim_y = 32
-    num_iter = 1000 
+    num_iter = 500 
     input_proj_dim = 0 
-    lr = 0.01
+    lr = 0.01 #0.01
 
     model = UFDM(dim_x, dim_y, lr=lr, input_projection_dim=input_proj_dim, weight_decay=0.000, device=device)
+
+    #model = UFDM(dim_x, dim_y, lr=lr,  weight_decay=0.00001, device=device, init_scale_shift=[1.0,1.0])    
+    #model.reset()
+
 
     cov_x = random_covariance_matrix(dim_x)
     cov_e = random_covariance_matrix(dim_y)
@@ -147,7 +177,8 @@ if __name__ == "__main__":
 
     history_gradient_estimator = []
     for i in range(num_iter):
-        x, y = sample_random_batch(X, Y, n_batch)
+        #x, y = sample_random_batch(X, Y, n_batch)
+        x, y = sample_ith_batch(X, Y, n_batch, i)
         dep = model(x, y, normalize=False)
         history_gradient_estimator.append(dep.cpu().detach().numpy())
 

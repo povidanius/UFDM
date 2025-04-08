@@ -18,12 +18,12 @@ writer = SummaryWriter()
 from sklearn.metrics import *
 
 #torch.manual_seed(31337)
-
+breakpoint()
 
 data_path='/home/tank/Downloads/melanoma/joined'
 
 sys.path.insert(0, "../")
-from kac_independence_measure import KacIndependenceMeasure
+from ufdm import UFDM
 from torch.nn.functional import *
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -39,14 +39,14 @@ def get_activation(name):
 REGULARIZER = 0
 LOSS = 1
 
-#kim = KacIndependenceMeasure(2, 2, lr=0.001, input_projection_dim = 0, weight_decay=0.1, device=device) #0.007
-kimy1 = KacIndependenceMeasure(128, 2, lr=0.007, input_projection_dim = 0, weight_decay=0.01, device=device) #0.007
-kimy2 = KacIndependenceMeasure(64, 2, lr=0.007, input_projection_dim = 0, weight_decay=0.01, device=device) #0.007
-kimy3 = KacIndependenceMeasure(32, 2, lr=0.007, input_projection_dim = 0, weight_decay=0.01, device=device) #0.007
+#kim = UFDM(2, 2, lr=0.001, input_projection_dim = 0, weight_decay=0.1, device=device) #0.007
+kimy1 = UFDM(128, 2, lr=0.007, input_projection_dim = 0, weight_decay=0.01, device=device) #0.007
+kimy2 = UFDM(64, 2, lr=0.007, input_projection_dim = 0, weight_decay=0.01, device=device) #0.007
+kimy3 = UFDM(32, 2, lr=0.007, input_projection_dim = 0, weight_decay=0.01, device=device) #0.007
 
-kimx1 = KacIndependenceMeasure(128, 256, lr=0.007, input_projection_dim = 0, weight_decay=0.01, device=device) #0.007
-kimx2 = KacIndependenceMeasure(64, 256, lr=0.007, input_projection_dim = 0, weight_decay=0.01, device=device) #0.007
-kimx3 = KacIndependenceMeasure(32, 256, lr=0.007, input_projection_dim = 0, weight_decay=0.01, device=device) #0.007
+kimx1 = UFDM(128, 256, lr=0.007, input_projection_dim = 0, weight_decay=0.01, device=device) #0.007
+kimx2 = UFDM(64, 256, lr=0.007, input_projection_dim = 0, weight_decay=0.01, device=device) #0.007
+kimx3 = UFDM(32, 256, lr=0.007, input_projection_dim = 0, weight_decay=0.01, device=device) #0.007
 
 
 

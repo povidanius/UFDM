@@ -4,6 +4,7 @@
 Code repository for Uniform Fourier Dependence Measure (UFDM).
 
 Working current paper draft (UFDM)[https://www.researchgate.net/publication/360919080_Measuring_Statistical_Dependencies_via_Maximum_Norm_and_Characteristic_Functions].
+Journal publication: TODO
 
 Experiments performed in the paper:
 

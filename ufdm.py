@@ -4,6 +4,7 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 import itertools
 import numpy as np
+from torch import Tensor, linalg as LA
 
 
 class UFDM(nn.Module):
@@ -45,9 +46,56 @@ class UFDM(nn.Module):
 
 
         self.trainable_parameters = param_list  + [self.a, self.b] + list(self.bnx.parameters()) + list(self.bny.parameters())
-        
-        self.optimizer = torch.optim.AdamW(param_list  + [self.a, self.b] + list(self.bnx.parameters()) + list(self.bny.parameters()), lr=self.lr, weight_decay=self.weight_decay) 
+        self.optimizer = torch.optim.AdamW(self.trainable_parameters, lr=self.lr, weight_decay=self.weight_decay) 
 
+    # --------------------------------------------------------------------- #
+    @torch.no_grad()
+    def svd_initialise0(self, X: Tensor, Y: Tensor) -> None:
+        """Initialise a, b with top singular vectors of Cov[X,Y]."""
+        C = X.T @ Y / X.shape[0]
+        U, _, Vh = LA.svd(C, full_matrices=False)
+        self.a.copy_(U[:, 0].real[: self.a.numel()])
+        self.b.copy_(Vh[0].real[: self.b.numel()])
+
+    @torch.no_grad()
+    def svd_initialise(self, X: Tensor, Y: Tensor) -> None:
+        """Initialise a, b with top canonical correlation directions."""
+        epsilon = 1e-6  # Small constant to avoid division by zero
+        # Compute standard deviations for each dimension
+        std_X = X.std(dim=0)
+        std_Y = Y.std(dim=0)
+        # Inverse square root of standard deviations for normalization
+        D_X_inv_sqrt = 1.0 / (std_X + epsilon)
+        D_Y_inv_sqrt = 1.0 / (std_Y + epsilon)
+        # Normalize X and Y
+        X_norm = X * D_X_inv_sqrt
+        Y_norm = Y * D_Y_inv_sqrt
+        # Compute normalized cross-covariance matrix
+        C_norm = X_norm.T @ Y_norm / X.shape[0]
+        # Perform SVD on the normalized matrix
+        U, _, Vh = LA.svd(C_norm, full_matrices=False)
+        # Adjust the singular vectors to the original space
+        a_init = D_X_inv_sqrt * U[:, 0]
+        b_init = D_Y_inv_sqrt * Vh[0, :]
+        # Copy to parameters a and b
+        self.a.copy_(a_init.real[: self.a.numel()])
+        self.b.copy_(b_init.real[: self.b.numel()])
+        #print(f'{self.a}, {self.b}')
+
+    @torch.no_grad()
+    def bootstrap_svd_init(self, X, Y, sample_frac=0.5, seed=None):
+        #print("bootstrap")
+        rng = torch.Generator() #device=X.device)
+        if seed is not None: rng.manual_seed(seed)
+
+        n = X.shape[0]
+        idx = torch.randperm(n)[: int(sample_frac*n)]
+        C = X[idx].T @ Y[idx] / idx.numel()
+
+    
+        U, _, Vh = torch.linalg.svd(C, full_matrices=False)
+        self.a.copy_(U[:, 0].real[: self.a.numel()])
+        self.b.copy_(Vh[0].real[: self.b.numel()])
 
     def project(self, x, normalize=True):
         x = x.to(self.device)
@@ -57,36 +105,29 @@ class UFDM(nn.Module):
         proj = self.projection_x(x)            
         return proj
 
+    def set_params(self, a,b):
+        self.a = a
+        self.b = b
 
     def forward(self, x, y, update = True, normalize=True):
         x = x.to(self.device)
         y = y.to(self.device)
         if normalize:
             x = self.bnx(x)
-            y = self.bny(y)
-        
+            y = self.bny(y)      
 
         if self.input_projection_dim > 0:                
                 x = self.projection_x(x)
         if self.output_projection_dim > 0:
                 y = self.projection_y(y)
 
-
         
-       
-        #dimx = np.sqrt(float(self.a.shape[0]))
-        #dimy = np.sqrt(float(self.b.shape[0]))
-        #xa = x @ self.a / dimx # /  (dimx*torch.norm(self.a))
-        #yb = y @ self.b /dimy #/ (dimy*torch.norm(self.b))
-
-        dimx = 1 # (float(self.a.shape[0]))
-        dimy = 1 # (float(self.b.shape[0]))
-        xa = x @ self.a /   (dimx*torch.norm(self.a))
-        yb = y @ self.b / (dimy*torch.norm(self.b))
-
+        xa = (x @ self.a)
+        yb = (y @ self.b)
      
         f1 = torch.exp(1j*(xa + yb)).mean() - torch.exp(1j*xa).mean() * torch.exp(1j*yb).mean()
         ufdm = torch.norm(f1)
+
 
         if update:
             loss = -ufdm 
@@ -97,8 +138,9 @@ class UFDM(nn.Module):
                 loss = loss + self.orthogonality_enforcer*torch.norm(torch.matmul(self.projection_y.weight,self.projection_y.weight.T) - torch.eye(self.output_projection_dim).to(self.device)) # maximise => negative
 
             self.optimizer.zero_grad()
-            loss.backward()
-            self.optimizer.step()   
+            loss.backward() 
+
+            self.optimizer.step()
 
         return ufdm
         

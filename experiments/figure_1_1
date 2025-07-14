@@ -1,6 +1,0 @@
-#!/bin/bash
-python figure_1_1.py independence
-python figure_1_1.py linear
-python figure_1_1.py quadratic
-python figure_1_1.py logarithmic
-python figure_1_1.py trigonometric

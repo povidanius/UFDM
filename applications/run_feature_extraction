@@ -1,0 +1,3 @@
+#!/bin/bash
+
+seq 25 | xargs -n1 -I{} python feature_extraction_dim_selection.py "$1"

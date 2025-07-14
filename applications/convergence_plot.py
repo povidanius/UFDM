@@ -19,6 +19,7 @@ device = "cuda:0"
 # Insert path to the system
 sys.path.insert(0, "../")
 
+
 def sample_multivariate_gaussian(cov_matrix, n):
     """
     Sample `n` samples from a multivariate Gaussian distribution given a covariance matrix.
@@ -45,14 +46,14 @@ class LossGaussian(nn.Module):
         self.cov_xy = cov_xy.to(self.device)
 
     def forward(self, alpha, beta):
-        dimx = alpha.shape[0]
-        dimy = beta.shape[0]
+        #dimx = alpha.shape[0]
+        #dimy = beta.shape[0]
 
         #a = alpha + 0.00001*torch.randn(alpha.shape).to(self.device) #/ (dimx*torch.norm(alpha))
         #b = beta + 0.00001*torch.randn(beta.shape).to(self.device) # / (dimy*torch.norm(beta))
 
-        a = alpha /  (dimx*torch.norm(alpha))
-        b = beta / (dimy*torch.norm(beta))
+        a = alpha #/  (dimx*torch.norm(alpha))
+        b = beta #/ (dimy*torch.norm(beta))
 
         #a = alpha /  np.sqrt(dimx)
         #b = beta /  np.sqrt(dimy)
@@ -66,6 +67,10 @@ class LossGaussian(nn.Module):
         v1 = torch.exp(-0.5 * (aSxxa + bSxxb))
         v2 = torch.abs(torch.exp(-aSxyb) - 1.0)
         ret_val = v1 * v2
+
+        #print(v1.item())
+        #print(v2.item())
+        #breakpoint()
 
         return ret_val
 
@@ -146,47 +151,64 @@ def covariance_XY(Sigma_X, Sigma_E, W):
 
 if __name__ == "__main__":
     n_batch = 1024
-    n = n_batch * 100
     dim_x = 32
     dim_y = 32
     num_iter = 500 
     input_proj_dim = 0 
     lr = 0.01 #0.01
 
-    model = UFDM(dim_x, dim_y, lr=lr, input_projection_dim=input_proj_dim, weight_decay=0.000, device=device)
-
+    #model = UFDM(dim_x, dim_y, lr=lr, input_projection_dim=input_proj_dim, weight_decay=0.000, device=device)
     #model = UFDM(dim_x, dim_y, lr=lr,  weight_decay=0.00001, device=device, init_scale_shift=[1.0,1.0])    
     #model.reset()
 
+    model = UFDM(dim_x, dim_y, lr=lr,  weight_decay=0.00001, device=device, init_scale_shift=[1.0,1.0])    
+    model.reset()
 
-    cov_x = random_covariance_matrix(dim_x)
+
+    cov_x = 0.001*random_covariance_matrix(dim_x)
     cov_e = random_covariance_matrix(dim_y)
 
-    X = sample_multivariate_gaussian(cov_x, n)
+    """
+    X = sample_mu   ltivariate_gaussian(cov_x, n)
     E = sample_multivariate_gaussian(cov_e, n)    
     W = torch.randn(dim_x, dim_y)
 
     Px = torch.matmul(X, W)
+    
     Y = Px + E
 
     print(f"{X.shape} {Y.shape} {E.shape} {W.shape}")
+    """
 
+    W = torch.randn(dim_x, dim_y)
     cov_xy, cov_y = covariance_XY(cov_x.detach().cpu().numpy(), cov_e.detach().cpu().numpy(), W.detach().cpu().numpy())
 
     print("Estimating UFDM with no distributional assumption")
 
     history_gradient_estimator = []
     for i in range(num_iter):
-        #x, y = sample_random_batch(X, Y, n_batch)
-        x, y = sample_ith_batch(X, Y, n_batch, i)
-        dep = model(x, y, normalize=False)
-        history_gradient_estimator.append(dep.cpu().detach().numpy())
+        x = sample_multivariate_gaussian(cov_x, n_batch)
+        e = sample_multivariate_gaussian(cov_e, n_batch)    
+        Px = torch.matmul(x, W)
+        y = Px + 0.1*e
+
+        if i == 0:
+            #x, y = sample_ith_batch(X, Y, n_batch, i)
+            model.svd_initialise(x,y)
+        else:    
+            #x, y = sample_random_batch(X, Y, n_batch)
+            #x, y = sample_ith_batch(X, Y, n_batch, i)
+            dep = model(x.to(device), y.to(device), normalize=False)
+            history_gradient_estimator.append(dep.cpu().detach().numpy())
 
     plt.plot(history_gradient_estimator)
 
-    a = Variable(1.0 * torch.rand(dim_x, device=device) + 0.0, requires_grad=True).to(device)
-    b = Variable(1.0 * torch.rand(dim_y, device=device) + 0.0, requires_grad=True).to(device)
 
+    U, S, Vh = torch.linalg.svd(cov_xy.to(device), full_matrices=False)
+    a = Variable(U[:, 0].clone(), requires_grad=True)
+    b = Variable(Vh[0].clone(), requires_grad=True)
+    print(a)
+    print(b)
     history_gaussian_estimator = []
     loss_gaussian = LossGaussian(cov_x, cov_y, cov_xy)
 

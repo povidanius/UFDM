@@ -1,6 +1,0 @@
-#!/bin/bash
-python figure_2_2.py linear
-python figure_2_2.py quadratic
-python figure_2_2.py logarithmic
-python figure_2_2.py trigonometric
-

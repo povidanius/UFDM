@@ -1,1 +1,0 @@
-seq 25 | xargs -l -- python ./regularization_experiment1.py 1 

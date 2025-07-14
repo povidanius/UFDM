@@ -10,6 +10,7 @@ import sys
 sys.path.insert(0, "../")
 from ufdm import *
 import os
+import dcor
 
 """
 This is code to reproduce right part of Figure 1.
@@ -93,25 +94,33 @@ if __name__ == "__main__":
         for e in range(num_experiments):
             print(e)
 
-            model = UFDM(dim_x, dim_y, lr=lr,  weight_decay=0.00001, device=device, init_scale_shift=[1.0,1.0])    
+            model = UFDM(dim_x, dim_y, lr=lr,  weight_decay=0.001, device=device, init_scale_shift=[1.0,1.0])    
             model.reset()
 
             # simulate dependent data (additive noise model)
             print(fun_type)
             history_dep = []
             for i in range(num_iter):
-                x = torch.randn(n_batch, dim_x)
-        
-                #random_proj = nn.Linear(dim_x, dim_y) # random projection
-
+                x = torch.randn(n_batch, dim_x)                   
                 proj_x = random_proj(x)
                 noise = torch.randn(n_batch, dim_y) # noise distribution
                 y = get_y(proj_x, noise, fun_type)  # dependence
-                dep = model(x.to(device),y.to(device), normalize=False)
-                history_dep.append(dep.clone().cpu().detach().numpy())
-            plt.plot(history_dep)  
-            #plt.show()
-            #breakpoint()
+
+                if i == 0:
+                      model.svd_initialise(x,y)
+                else:
+                    dep = model(x.to(device),y.to(device), normalize=False)
+                    history_dep.append(dep.clone().cpu().detach().numpy())
+                    #print(dep)
+            
+
+            x = torch.randn(n_batch, dim_x)                   
+            proj_x = random_proj(x)
+            noise = torch.randn(n_batch, dim_y) # noise distribution
+            y = get_y(proj_x, noise, fun_type)  # dependence
+            dep_dc = dcor.u_distance_correlation_sqr(x.detach().cpu().numpy(),y.detach().cpu().numpy(), exponent=1)
+            print(dep_dc)
+
 
 
             fname = get_file_name(fun_type)

@@ -20,10 +20,31 @@ from sklearn.datasets import make_moons
 #np.random.seed(42)
 #torch.manual_seed(42)
 
-if len(sys.argv) == 5:
-    n_samples, d, distribution, x_dist_type = int(sys.argv[1]), int(sys.argv[2]), sys.argv[3], sys.argv[4]
+#
+distributions0 = [
+        "independent_student_t", "independent_gaussian", "independent_uniform",  "linear_strong", "linear_weak", "logarithmic",
+        "quadratic", "polynomial", "contaminated_sine", "conditional_variance"
+    ]
+
+distributions1 = ['mixture_bimodal_marginal','mixture_bimodal','circular','gaussian_copula','clayton_copula','interleaved_moons'] 
+
+permisable_x_distributions = ['uniform','gaussian','student_t']
+x_dist_type = 'complex_patterns'
+
+if len(sys.argv) == 3:
+    n_samples, d = int(sys.argv[1]), int(sys.argv[2])
+    distributions = distributions1
+elif len(sys.argv) == 4:
+    n_samples, d, x_dist_type = int(sys.argv[1]), int(sys.argv[2]), sys.argv[3]
+    assert x_dist_type in ['uniform','gaussian','student_t'], f"distribution should be in {permisable_x_distributions}"    
+    distributions = distributions0
 else:
-    print("Usage {}")
+    print("Usage:")
+    print(f"{sys.argv[0]} n_samples, dimension -- for experiment with complext patterns")
+    print("or")
+    print(f"{sys.argv[0]} n_samples, dimension, x_distribution -- for experiment with simple patterns")
+    sys.exit(0)
+
 print(f'{x_dist_type} {n_samples} {d}')
 
 freq = 6
@@ -386,17 +407,9 @@ def compute_mef(x, y, sx=None, sy=None):
     return calculate_MI(x.to(device), y.to(device), sx, sy, 1.01, normalize=False).detach().cpu().numpy()
 
 
-distributions = [
-        "independent_student_t", "independent_gaussian", "independent_uniform",  "linear_strong", "linear_weak", "logarithmic",
-        "quadratic", "polynomial", "mixture_bimodal_marginal", "mixture_bimodal", "circular", "contaminated_sine"
-    ]
-
-distributions = ['interleaved_moons']
 
 
-
-#measures = ["UFDM","DCOR", "HSIC", "MEF"]
-measures = ["HSIC"]
+measures = ["UFDM","DCOR", "HSIC", "MEF"]
 results = {dist: {m: [] for m in measures} for dist in distributions}
 
 for dist_type in distributions:
@@ -435,5 +448,8 @@ for dist_type in distributions:
 
 
         print(results)
-        #with open(f'./results/{n_samples}/{x_dist_type}/temp_data_{n_samples}_{d}_{freq}.json', 'w') as fp:
-        #    json.dump(results, fp)
+
+        if not os.path.exists('./results/{n_samples}/{x_dist_type}/'):
+            os.makedirs('./results/{n_samples}/{x_dist_type}/')        
+        with open(f'./results/{n_samples}/{x_dist_type}/data_{n_samples}_{d}_{freq}.json', 'w') as fp:
+            json.dump(results, fp)

@@ -48,7 +48,7 @@ else:
 print(f'{x_dist_type} {n_samples} {d}')
 
 freq = 6
-n_permutations = 500  # Number of permutations (reduced for speed, can increase to 1000)
+n_permutations = 500  
 num_experiments = 10   # Number of trials per distribution
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 dim_x = d
@@ -59,7 +59,7 @@ alpha = 0.05  # Significance level
 
 def sample_clayton_copula(n_samples: int, dim_x: int, dim_y: int, theta: float):
     """
-    Correctly samples from a Clayton copula using the Marshall-Olkin algorithm
+    Samples from a Clayton copula using the Marshall-Olkin algorithm
     and transforms the marginals to be standard normal.
 
     Args:
@@ -449,7 +449,7 @@ for dist_type in distributions:
 
         print(results)
 
-        if not os.path.exists('./results/{n_samples}/{x_dist_type}/'):
-            os.makedirs('./results/{n_samples}/{x_dist_type}/')        
+        if not os.path.exists(f'./results/{n_samples}/{x_dist_type}/'):
+            os.makedirs(f'./results/{n_samples}/{x_dist_type}/')        
         with open(f'./results/{n_samples}/{x_dist_type}/data_{n_samples}_{d}_{freq}.json', 'w') as fp:
             json.dump(results, fp)

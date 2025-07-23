@@ -13,12 +13,7 @@ Code repository for **Uniform Fourier Dependence Measure (UFDM)**.
 
 ---
 
-### 🛠 Build and Run with Docker
 
-**Build the Docker image and run:**
-```bash
-docker build -t ufdm .
-bash run_docner.sh
 
 ### 🛠 Build and Run with Docker
 

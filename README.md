@@ -7,7 +7,7 @@ Code repository for **Uniform Fourier Dependence Measure (UFDM)**.
 
 ### 📄 Related Publication
 
-- **Previous citable preprint** https://arxiv.org/abs/2208.07934
+- **Previous citable preprint (definition, some basic theory and some applications)** https://arxiv.org/abs/2208.07934
 - **Current (almost) polished paper draft (UFDM):** [Measuring Statistical Dependencies via Maximum Norm and Characteristic Functions](https://www.researchgate.net/publication/360919080_Measuring_Statistical_Dependencies_via_Maximum_Norm_and_Characteristic_Functions)  
 - **Journal publication:** *TODO*
 

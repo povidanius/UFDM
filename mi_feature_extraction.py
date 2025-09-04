@@ -57,55 +57,43 @@ class MiFeatureExtraction(nn.Module):
         return HSIC
 
 
-    def DCOR(self, x, y, exponent=1.0):
-        """
-        Calculate unbiased distance correlation between x and y.
-        
-        Args:
-            x: Tensor of shape (n, d1), input data
-            y: Tensor of shape (n, d2), input data
-            exponent: float, power applied to Euclidean distances (default 1.0)
-        
-        Returns:
-            Unbiased distance correlation (scalar)
-        """
-        
-        # Input validation
-        if x.shape[0] != y.shape[0]:
-            raise ValueError("x and y must have same number of samples")
-        if x.shape[0] < 4:
-            raise ValueError("Need at least 4 samples for unbiased estimator")
-        
-        n = x.shape[0]
-        
-        # Compute pairwise Euclidean distances and apply exponent
-        def pairwise_dist(z):
-            return torch.cdist(z, z, p=2).pow(exponent)
-        
-        # Unbiased double-centering
-        def u_center(D):
-            row_means = D.mean(dim=1, keepdim=True)
-            col_means = D.mean(dim=0, keepdim=True)
-            grand_mean = D.mean()
-            c = 1.0 / (n - 2)
-            A = D - c * (row_means + col_means) + grand_mean / ((n - 1) * (n - 2))
-            A.fill_diagonal_(0.0)
-            return A
-        
-        # Compute distance covariance
-        a = u_center(pairwise_dist(x))
-        b = u_center(pairwise_dist(y))
-        dcov2 = (a * b).sum() / (n * (n - 3))
-        
-        # Compute distance variances
-        dvar_x = (a * a).sum() / (n * (n - 3))
-        dvar_y = (b * b).sum() / (n * (n - 3))
-        
-        # Compute distance correlation
-        denom = torch.sqrt(dvar_x * dvar_y)
-        dcor = torch.zeros_like(dcov2) if denom == 0 else dcov2 / denom
-        
-        return dcor
+    def DCOR(self, x, y, exponent=1.0, squared=True, eps=1e-12):
+            """
+            Unbiased distance correlation (Székely & Rizzo).
+            If squared=True returns R^2, else returns R.
+            """
+            if x.shape[0] != y.shape[0]:
+                raise ValueError("x and y must have same number of samples")
+            if x.shape[0] < 4:
+                raise ValueError("Need at least 4 samples for unbiased estimator")
+
+            n = x.shape[0]
+
+            def pairwise_dist(z):
+                return torch.cdist(z, z, p=2).pow(exponent)
+
+            def u_center(D):
+                row_sums = D.sum(dim=1, keepdim=True)
+                col_sums = D.sum(dim=0, keepdim=True)
+                total_sum = D.sum()
+                A = D - row_sums/(n-2) - col_sums/(n-2) + total_sum/((n-1)*(n-2))
+                A = A.clone()
+                A.fill_diagonal_(0.0)
+                return A
+
+            a = u_center(pairwise_dist(x))
+            b = u_center(pairwise_dist(y))
+
+            dcov2  = (a * b).sum() / (n * (n - 3))
+            # unbiased estimator can be slightly negative in finite samples
+            dcov2  = torch.clamp(dcov2, min=0.0)
+            dvar_x = (a * a).sum() / (n * (n - 3))
+            dvar_y = (b * b).sum() / (n * (n - 3))
+
+            denom = torch.sqrt(torch.clamp(dvar_x * dvar_y, min=eps))
+            r2 = dcov2 / denom  # this is distance correlation squared
+
+            return r2 if squared else torch.sqrt(r2)
 
     def get_sigma(self, x):
         pd = self.pairwise_distances(x)
@@ -156,3 +144,64 @@ class MiFeatureExtraction(nn.Module):
         return mi
 
 
+if __name__ == "__main__":
+    import numpy as np
+    import dcor
+
+    # For reproducibility
+    torch.manual_seed(0)
+    np.random.seed(0)
+
+    def compare_once(n=1000, d1=15, d2=15, dependent=True, noise=0.1, device="cpu"):
+        """
+        Build a synthetic dataset (independent or dependent),
+        compute unbiased squared distance correlation with:
+          (a) our torch implementation (MiFeatureExtraction.DCOR)
+          (b) the reference dcor.u_distance_correlation_sqr
+        and return both values.
+        """
+        if dependent:
+            X = np.random.randn(n, d1)
+            W = np.random.randn(d1, d2)
+            Y = X @ W + noise * np.random.randn(n, d2)
+        else:
+            X = np.random.randn(n, d1)
+            Y = np.random.randn(n, d2)
+
+        xt = torch.from_numpy(X).float().to(device)
+        yt = torch.from_numpy(Y).float().to(device)
+
+        # Instantiate with a nonzero input_projection_dim to avoid init error,
+        # but we don't use the projection or BN here.
+        mfe = MiFeatureExtraction(
+            dim_x=d1,
+            dim_y=d2,
+            input_projection_dim=1,
+            device=device,
+        )
+
+        ours = mfe.DCOR(xt, yt, exponent=1.0, squared=True).detach().cpu().item()
+        theirs = float(dcor.u_distance_correlation_sqr(X, Y))
+
+        return ours, theirs
+
+    # Run both an independent and a dependent check
+    cases = [("independent", False), ("dependent", True)]
+    for name, dep in cases:
+        ours, ref = compare_once(dependent=dep)
+        print(f"{name:>12} case -> ours = {ours:.8f} | dcor = {ref:.8f}")
+        # Allow tiny numerical differences
+        if not np.isclose(ours, ref, rtol=1e-5, atol=1e-7):
+            raise AssertionError(
+                f"Mismatch in {name} case: ours={ours}, dcor={ref}"
+            )
+
+    # Extra robustness: multiple random trials for the dependent case
+    for trial in range(3):
+        torch.manual_seed(trial + 1)
+        np.random.seed(trial + 1)
+        ours, ref = compare_once(dependent=True)
+        print(f"trial {trial+1} (dependent) -> ours = {ours:.8f} | dcor = {ref:.8f}")
+        assert np.isclose(ours, ref, rtol=1e-5, atol=1e-7)
+
+    print("All DCOR unbiased (squared) tests passed ✅")

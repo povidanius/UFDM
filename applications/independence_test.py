@@ -233,12 +233,7 @@ def generate_data(dist_type, n_samples, dim_x, dim_y,  x_type ='uniform'):
                 x[i] = torch.randn(1, dim_x) - torch.tensor([2.0] * dim_x)
                 y[i] = torch.randn(1, dim_y) - torch.tensor([2.0] * dim_y)
         y += noise        
-    elif dist_type == "interleaved_moons":
-        # RATIONALE: This is a powerful example designed to show a clear
-        # advantage for UFDM. The dependency is purely structural and designed
-        # to be coherent for distance-based measures while being a massive
-        # violation of independence from a distributional shape perspective.
-        
+    elif dist_type == "interleaved_moons":       
         # 1. Generate two separate "two moons" datasets.
         # The labels (0 or 1) indicate which moon a point belongs to.
         X_moons, x_labels = make_moons(n_samples=n_samples, noise=0.05)
@@ -277,10 +272,6 @@ def generate_data(dist_type, n_samples, dim_x, dim_y,  x_type ='uniform'):
     elif dist_type == 'contaminated_sine':
         x,y = contaminated_sine(x, dim_x, p=0.05, freq=freq, scale=25.0)
     elif dist_type == "high_freq_rotational":
-        # This is the specific example designed to show a clear advantage for UFDM.
-        # The dependency is a high-frequency sine wave along a single, random,
-        # hidden direction in a high-dimensional space.
-        
         # 1. Define parameters for this specific case
         high_frequency = 10.0  # A high k-value
         
@@ -302,8 +293,7 @@ def generate_data(dist_type, n_samples, dim_x, dim_y,  x_type ='uniform'):
         y = y_signal.repeat(1, dim_y) + noise # Add a small amount of noise
         
         return x, y
-    # --- END OF NEW EXAMPLE ---
-            
+           
     else:        
         raise ValueError(f"Unknown distribution type: {dist_type}")
     return x, y

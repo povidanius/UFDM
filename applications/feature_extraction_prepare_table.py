@@ -6,6 +6,8 @@ from scipy.stats import wilcoxon
 from pathlib import Path
 from sklearn.datasets import fetch_openml
 import warnings
+import scikit_posthocs as sp
+
 warnings.filterwarnings("ignore")
 
 
@@ -13,21 +15,26 @@ NUM_BASELINES = 6
 PVAL_THRESHOLD = 0.05
 ALGOS = ['RAW','UFDM','DCOR','MEF','HSIC','NCA']
 # path = r'./feature_extraciton' # use your path
-all_files = glob.glob('./feature_extraction/*.csv')
+all_files = glob.glob('./feature_extraction_cv2/*.csv')
 
 li = []
 win_counter = np.zeros((NUM_BASELINES, NUM_BASELINES))
-idx = 1
+loose_counter = np.zeros((NUM_BASELINES, NUM_BASELINES))
+
+idx = 0
+accuracies = []
 for filename in all_files:
     # print(filename)
     x = genfromtxt(filename, delimiter=',')
 
-    if x.shape[0] < 5 or len(x.shape) == 1:
+    if x.shape[0] < 3 or len(x.shape) == 1:
         continue
     # print("{} {} {}".format(idx, filename, x.shape))
     idx += 1
 
     acc_avg = np.mean(x, axis=0)
+    accuracies.append(acc_avg)
+
     # print("{} {}".format(filename, acc_avg))
     # breakpoint()
     max_ind = np.argmax(acc_avg)
@@ -44,7 +51,12 @@ for filename in all_files:
                 w, p = wilcoxon(x[:, ind], x[:, ind1], alternative="greater")
                 if p < PVAL_THRESHOLD:
                     win_counter[ind, ind1] += 1.0
-                    # if ind1 != 0:
+
+                w, p = wilcoxon(x[:, ind], x[:, ind1], alternative="less")
+                if p < PVAL_THRESHOLD:
+                    loose_counter[ind, ind1] += 1.0
+
+                    #if ind1 != 0 and ind != 0:
                     #    print("{} > {}".format(ALGOS[ind],ALGOS[ind1]))
 
     significant = False
@@ -67,6 +79,7 @@ for filename in all_files:
         else:
             print(r'%2.3f' % (acc_avg[ind]), end=" ")
     
+
     # print(np.max(p_vals))
     print("\\\\")
     # df = pd.read_csv(filename, index_col=None, header=0)
@@ -74,12 +87,21 @@ for filename in all_files:
     # print(df.shape)
     # x = df[1:]
     # print(x)
-print(win_counter)
+accuracies = np.array(accuracies)    
+print(win_counter[1:,1:])
 win_counter = win_counter[1:, 1:]
 wins = np.sum(win_counter, axis=1)
 methods = ['UFDM', 'DCOR', 'MEF', 'HSIC', 'NCA']
 for i, m in enumerate(methods):
     print("{} {}".format(m, wins[i]))
+print('---')    
+print(loose_counter[1:,1:])
+loose_counter = loose_counter[1:, 1:]
+looses = np.sum(loose_counter, axis=1)
+for i, m in enumerate(methods):
+    print("{} {}".format(m, looses[i]))
+print(f'{idx} data sets.')    
+
+cd = sp.posthoc_nemenyi_friedman(accuracies)
 #breakpoint()
-# frame = pd.concat(li, axis=0, ignore_index=True)
 

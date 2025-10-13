@@ -21,6 +21,9 @@ class UFDM(nn.Module):
         self.device = device
         self.init_scale_shift = init_scale_shift
         self.tanh =  torch.nn.Tanh()
+
+        self.max_norm = 25.0
+
         self.reset()
 
     def reset(self):
@@ -109,6 +112,19 @@ class UFDM(nn.Module):
         self.a = a
         self.b = b
 
+
+    def clamp_params(self):
+        """Clamp [a, b] to max_norm ball."""
+        if self.max_norm is None:
+            return
+        gamma = torch.cat([self.a, self.b])
+        norm_gamma = LA.norm(gamma)
+        if norm_gamma > self.max_norm:
+            gamma = gamma / norm_gamma * self.max_norm
+        # Split back with data
+        self.a.data.copy_(gamma[:self.a.numel()])
+        self.b.data.copy_(gamma[self.a.numel():])
+
     def forward(self, x, y, update = True, normalize=True):
         x = x.to(self.device)
         y = y.to(self.device)
@@ -141,6 +157,9 @@ class UFDM(nn.Module):
             loss.backward() 
 
             self.optimizer.step()
+
+            # Clamp after step
+            self.clamp_params()
 
         return ufdm
         

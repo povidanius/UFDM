@@ -32,6 +32,12 @@ Example:
 ```
 ./run_feature_extraction USPS
 ```
+(will run with the orthogonality regulariser 1)
+
+```
+./run_feature_extraction_lambda_grid USPS
+```
+(will select the orthogonality regulariser from a grid, very slow)
 
 
 > **Note:** Datasets for the feature‑extraction experiments are downloaded automatically via the **OpenML API**.

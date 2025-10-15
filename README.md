@@ -37,7 +37,7 @@ Example:
 ```
 ./run_feature_extraction_lambda_grid USPS
 ```
-(will select the orthogonality regulariser from a grid, very slow)
+(will select the orthogonality regulariser from a grid, 3x slower)
 
 
 > **Note:** Datasets for the feature‑extraction experiments are downloaded automatically via the **OpenML API**.

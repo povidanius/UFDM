@@ -22,7 +22,7 @@ from sklearn.datasets import make_moons
 
 #
 distributions0 = [
-        #"independent_student_t", "independent_gaussian", "independent_uniform", 
+        "independent_student_t", "independent_gaussian", "independent_uniform", 
         "linear_strong",
         "linear_weak", "logarithmic",
         "quadratic", "polynomial", "contaminated_sine", "conditional_variance"
@@ -363,7 +363,7 @@ def compute_ufdm(x, y, num_iter=num_iter, lr=lr, a = False, b = False, optimise=
     model.reset()
     history_dep = []
 
-    #model.svd_initialise0(x.to(device), y.to(device))   
+    model.svd_initialise0(x.to(device), y.to(device))   
 
 
     for i in range(num_iter):
@@ -442,7 +442,7 @@ for dist_type in distributions:
 
         print(results)
 
-        if not os.path.exists(f'./results_svd/{n_samples}/{x_dist_type}/'):
-            os.makedirs(f'./results_svd/{n_samples}/{x_dist_type}/')        
-        with open(f'./results_svd/{n_samples}/{x_dist_type}/data_{n_samples}_{d}_{freq}.json', 'w') as fp:
+        if not os.path.exists(f'./results2/{n_samples}/{x_dist_type}/'):
+            os.makedirs(f'./results2/{n_samples}/{x_dist_type}/')        
+        with open(f'./results2/{n_samples}/{x_dist_type}/data_{n_samples}_{d}_{freq}.json', 'w') as fp:
             json.dump(results, fp)

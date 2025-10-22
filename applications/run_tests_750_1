@@ -1,0 +1,16 @@
+#!/bin/bash
+
+python independence_test1.py 750 25 uniform
+python independence_test1.py 750 25 gaussian
+python independence_test1.py 750 25 student_t
+python independence_test1.py 750 25
+
+python independence_test1.py 750 15 uniform
+python independence_test1.py 750 15 gaussian
+python independence_test1.py 750 15 student_t
+python independence_test1.py 750 15
+
+python independence_test1.py 750 5 uniform
+python independence_test1.py 750 5 gaussian
+python independence_test1.py 750 5 student_t
+python independence_test1.py 750 5

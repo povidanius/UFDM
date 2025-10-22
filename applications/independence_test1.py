@@ -442,7 +442,7 @@ for dist_type in distributions:
 
         print(results)
 
-        if not os.path.exists(f'./results2/{n_samples}/{x_dist_type}/'):
-            os.makedirs(f'./results2/{n_samples}/{x_dist_type}/')        
-        with open(f'./results2/{n_samples}/{x_dist_type}/data_{n_samples}_{d}_{freq}.json', 'w') as fp:
+        if not os.path.exists(f'./results3/{n_samples}/{x_dist_type}/'):
+            os.makedirs(f'./results3/{n_samples}/{x_dist_type}/')        
+        with open(f'./results3/{n_samples}/{x_dist_type}/data_{n_samples}_{d}_{freq}.json', 'w') as fp:
             json.dump(results, fp)

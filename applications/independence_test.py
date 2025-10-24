@@ -20,14 +20,14 @@ from sklearn.datasets import make_moons
 #np.random.seed(42)
 #torch.manual_seed(42)
 
-"""
+
 distributions0 = [
-        "independent_student_t"#, "independent_gaussian" #, "independent_uniform", 
+        "independent_student_t", "independent_gaussian", "independent_uniform", 
         #"linear_strong",
         #"linear_weak", "logarithmic",
         #"quadratic", "polynomial", "contaminated_sine", "conditional_variance"
     ]
-"""
+
 
 if sys.argv[3] == "uniform":
     distributions0 = ["independent_student_t", "independent_gaussian" , "independent_uniform"]
@@ -64,7 +64,11 @@ print(f'{x_dist_type} {n_samples} {d}')
 
 freq = 6
 n_permutations = 500  
+<<<<<<< HEAD
 num_experiments = 250   # Number of trials per distribution
+=======
+num_experiments = 20   # Number of trials per distribution
+>>>>>>> 8c4bc8225a188066c0088212659d9aa4e7c55111
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 dim_x = d
 dim_y = d

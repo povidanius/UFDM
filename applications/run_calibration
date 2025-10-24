@@ -1,5 +1,15 @@
 #!/bin/bash
 
-python ./calibration_test.py 750 5 uniform
-python ./calibration_test.py 750 5 gaussian
-python ./calibration_test.py 750 5 student_t
+# Usage: ./run_calibration.sh <dimension>
+# Example: ./run_calibration.sh 15
+
+D=$1
+
+if [ -z "$D" ]; then
+  echo "Usage: $0 <dimension>"
+  exit 1
+fi
+
+python ./calibration_test.py 750 "$D" uniform
+python ./calibration_test.py 750 "$D" gaussian
+python ./calibration_test.py 750 "$D" student_t

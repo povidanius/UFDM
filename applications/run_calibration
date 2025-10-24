@@ -1,0 +1,5 @@
+#!/bin/bash
+
+python ./calibration_test.py 750 5 uniform
+python ./calibration_test.py 750 5 gaussian
+python ./calibration_test.py 750 5 student_t

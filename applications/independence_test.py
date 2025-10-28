@@ -50,7 +50,7 @@ print(f'{x_dist_type} {n_samples} {d}')
 
 freq = 6
 n_permutations = 500  
-num_experiments = 250   # Number of trials per distribution
+num_experiments = 10   # Number of trials per distribution
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 dim_x = d
 dim_y = d
@@ -442,5 +442,5 @@ for dist_type in distributions:
 
         if not os.path.exists(f'./results1/{n_samples}/{x_dist_type}/'):
             os.makedirs(f'./results1/{n_samples}/{x_dist_type}/')        
-        with open(f'./results1/{n_samples}/{x_dist_type}/{x_dist_type}_data_{n_samples}_{d}_{freq}.json', 'w') as fp:
+        with open(f'./results1/{n_samples}/{x_dist_type}/data_{n_samples}_{d}_{freq}.json', 'w') as fp:
             json.dump(results, fp)

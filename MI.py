@@ -28,7 +28,7 @@ def calculate_gram_mat(x, sigma):
     x = x.view(x.shape[0], -1)
     instances_norm = torch.sum(x**2, -1).reshape((-1, 1))
     dist = -2 * torch.mm(x, x.t()) + instances_norm + instances_norm.t()
-    return torch.exp(-dist / (2*sigma*sigma))
+    return torch.exp(-dist / sigma)
 
 def renyi_entropy(x, sigma, alpha, epsilon = 0.0):
     """Calculate entropy for single variables x (Eq.(9) in paper)
@@ -107,11 +107,27 @@ def pairwise_distances(x):
 
 def GaussianKernelMatrix(x, sigma):
     pairwise_distances_ = pairwise_distances(x)
-    return torch.exp(-pairwise_distances_ /(2*sigma*sigma))
+    return torch.exp(-pairwise_distances_ /sigma)
 
-def get_sigma(x):
-    pd = pairwise_distances(x)
-    return torch.sqrt(0.5 * torch.median(pd) )
+def get_sigma(x, eps=1e-8):
+    """
+    Median heuristic bandwidth selection.
+
+    Returns sigma such that the Gaussian kernel
+        k(x_i, x_j) = exp( - ||x_i - x_j||^2 / sigma )
+    uses sigma = median(||x_i - x_j||^2) over i<j.
+    """
+    with torch.no_grad():
+        pd = pairwise_distances(x)  # squared distances, shape (n,n)
+
+        # take upper triangular part WITHOUT the diagonal
+        i, j = torch.triu_indices(pd.shape[0], pd.shape[1], offset=1, device=x.device)
+        offdiag = pd[i, j]
+
+        m = torch.median(offdiag)
+        sigma = m + eps  # avoid zero bandwidth in degenerate case
+    return sigma
+
 
 def HSIC(x, y, s_x, s_y):
     
@@ -140,4 +156,3 @@ if __name__ == "__main__":
   print(hsic.detach().cpu().numpy())
   hsic = HSIC(x,x, sx, sx)
   print(hsic.detach().cpu().numpy())
-

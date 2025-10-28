@@ -1,0 +1,15 @@
+#!/bin/batch_size
+
+echo "Downloading computed p-values"
+
+mkdir -p ./vast.ai/H1_1
+scp -P 52578 -r root@115.231.176.132:/workspace/UFDM/applications/results{1,2} ./vast.ai/H1_1/
+
+mkdir -p ./vast.ai/H1_2
+scp -P 29791 -r root@79.112.33.230:/workspace/UFDM/applications/results{1,2} ./vast.ai/H1_2/
+
+mkdir -p ./vast.ai/H1_3
+scp -P 13166 -r root@81.166.162.13:/workspace/UFDM/applications/results{1,2} ./vast.ai/H1_3/
+
+mkdir -p ./vast.ai/H0_1
+scp -P 57995 -r root@77.104.167.149:/workspace/UFDM/applications/results_calib./vast.ai/H0_1/

@@ -21,7 +21,7 @@ Compares **UFDM** with **DCOR**, **HSIC**, and **MEF**.
 
 Example:
 ```
-python ./independence_test.py 1500 5 gaussian
+python ./independence_test.py 750 25 
 ```
 
 ### Feature extraction (linear representation learning)

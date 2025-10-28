@@ -21,15 +21,13 @@ from sklearn.datasets import make_moons
 #torch.manual_seed(42)
 
 #
-distributions0 = [
-        #"independent_student_t", "independent_gaussian", "independent_uniform", 
+distributions0 = [   
         "linear_strong",
         "linear_weak", "logarithmic",
         "quadratic", "polynomial", "contaminated_sine", "conditional_variance"
     ]
 
 distributions1 = ['mixture_bimodal_marginal','mixture_bimodal','circular','gaussian_copula','clayton_copula','interleaved_moons'] 
-#distributions1 = ['gaussian_copula','clayton_copula']
 
 permisable_x_distributions = ['uniform','gaussian','student_t']
 x_dist_type = 'complex_patterns'
@@ -52,7 +50,7 @@ print(f'{x_dist_type} {n_samples} {d}')
 
 freq = 6
 n_permutations = 500  
-num_experiments = 20   # Number of trials per distribution
+num_experiments = 10   # Number of trials per distribution
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 dim_x = d
 dim_y = d
@@ -359,7 +357,7 @@ def permutation_test1(x, y, measure_func, n_permutations, **kwargs):
 
 # Measure functions
 def compute_ufdm(x, y, num_iter=num_iter, lr=lr, a = False, b = False, optimise=True, debug=False):
-    model = UFDM(dim_x, dim_y, lr=lr, weight_decay=2.5, device=device, init_scale_shift=[1.0, 1.0]) 
+    model = UFDM(dim_x, dim_y, lr=lr, weight_decay=3.0, device=device, init_scale_shift=[1.0, 1.0]) 
     model.reset()
     history_dep = []
 
@@ -442,7 +440,7 @@ for dist_type in distributions:
 
         print(results)
 
-        if not os.path.exists(f'./results3/{n_samples}/{x_dist_type}/'):
-            os.makedirs(f'./results3/{n_samples}/{x_dist_type}/')        
-        with open(f'./results3/{n_samples}/{x_dist_type}/data_{n_samples}_{d}_{freq}.json', 'w') as fp:
+        if not os.path.exists(f'./results2/{n_samples}/{x_dist_type}/'):
+            os.makedirs(f'./results2/{n_samples}/{x_dist_type}/')        
+        with open(f'./results2/{n_samples}/{x_dist_type}/data_{n_samples}_{d}_{freq}.json', 'w') as fp:
             json.dump(results, fp)

@@ -363,7 +363,7 @@ def permutation_test1(x, y, measure_func, n_permutations, **kwargs):
 
 # Measure functions
 def compute_ufdm(x, y, num_iter=num_iter, lr=lr, a = False, b = False, optimise=True, debug=False):
-    model = UFDM(dim_x, dim_y, lr=lr, weight_decay=2.5, device=device, init_scale_shift=[1.0, 1.0]) 
+    model = UFDM(dim_x, dim_y, lr=lr, weight_decay=3.0, device=device, init_scale_shift=[1.0, 1.0]) 
     model.reset()
     history_dep = []
 
@@ -446,7 +446,7 @@ for dist_type in distributions:
 
         print(results)
 
-        if not os.path.exists(f'./results_4qq/{n_samples}/{x_dist_type}/'):
-            os.makedirs(f'./results_4qq/{n_samples}/{x_dist_type}/')        
-        with open(f'./results_4qq/{n_samples}/{x_dist_type}/{x_dist_type}_data_{n_samples}_{d}_{freq}.json', 'w') as fp:
+        if not os.path.exists(f'./results_calib/{n_samples}/{x_dist_type}/'):
+            os.makedirs(f'./results_calib/{n_samples}/{x_dist_type}/')        
+        with open(f'./results_calib/{n_samples}/{x_dist_type}/{x_dist_type}_data_{n_samples}_{d}_{freq}.json', 'w') as fp:
             json.dump(results, fp)

@@ -28,7 +28,7 @@ def calculate_gram_mat(x, sigma):
     x = x.view(x.shape[0], -1)
     instances_norm = torch.sum(x**2, -1).reshape((-1, 1))
     dist = -2 * torch.mm(x, x.t()) + instances_norm + instances_norm.t()
-    return torch.exp(-dist / sigma)
+    return torch.exp(-dist / (2*sigma*sigma))
 
 def renyi_entropy(x, sigma, alpha, epsilon = 0.0):
     """Calculate entropy for single variables x (Eq.(9) in paper)
@@ -107,7 +107,7 @@ def pairwise_distances(x):
 
 def GaussianKernelMatrix(x, sigma):
     pairwise_distances_ = pairwise_distances(x)
-    return torch.exp(-pairwise_distances_ /sigma)
+    return torch.exp(-pairwise_distances_ /(2*sigma*sigma))
 
 def get_sigma(x):
     pd = pairwise_distances(x)

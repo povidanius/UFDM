@@ -12,4 +12,4 @@ mkdir -p ./vast.ai/H1_3
 scp -P 13166 -r root@81.166.162.13:/workspace/UFDM/applications/results{1,2} ./vast.ai/H1_3/
 
 mkdir -p ./vast.ai/H0_1
-scp -P 57995 -r root@77.104.167.149:/workspace/UFDM/applications/results_calib./vast.ai/H0_1/
+scp -P 57995 -r root@77.104.167.149:/workspace/UFDM/applications/results_calib ./vast.ai/H0_1/

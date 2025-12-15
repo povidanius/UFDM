@@ -40,6 +40,7 @@ Example:
 ```
 (will select the orthogonality regulariser from a grid, 3x slower)
 
+> **Note:** Datasets for the feature‑extraction experiments are downloaded automatically via the **OpenML API**.
 
 ## Citation
 ```
@@ -58,6 +59,4 @@ DOI = {10.3390/e27121254}
 }
 ```
 
-
-> **Note:** Datasets for the feature‑extraction experiments are downloaded automatically via the **OpenML API**.
 

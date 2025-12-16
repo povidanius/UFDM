@@ -1,7 +1,7 @@
 # Uniform Fourier Dependence Measure
 ![UFDM](ufdm.png "UFDM")
 
-Code repository for **Uniform Fourier Dependence Measure (UFDM)**.
+Code repository for **[Uniform Fourier Dependence Measure (UFDM)](https://www.mdpi.com/1099-4300/27/12/1254)**.
 
 ---
 

@@ -54,7 +54,7 @@ UFDM estimator is sensitive to AdamW weight decay (WD), and this parameter shoul
 - We also conducted permutation tests with a sample size of n = 375 (under the same configuration as in the paper). The [empirical power table](https://github.com/povidanius/UFDM/blob/main/UFDM_empirical_power_n_375.pdf). 
   
 **Feature extraction:** 
-- smaller decay (**WD = 0.1** - as in published experiments) performs better; large WD tends to over-regularise informative directions.
+- smaller decay (**WD = 0.1** - as in published experiments) performs better; large WD tends to over-regularise informative directions. For this task UFDM was effective for larger d (up to 1300).
 
 
 ## Citation

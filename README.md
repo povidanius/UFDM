@@ -48,13 +48,13 @@ UFDM estimator is sensitive to AdamW weight decay (WD), and this parameter shoul
 
 **Permutation tests:** 
 
-- In our paper, we used WD = 3.0; small WD (≈0.1–0.3) can substantially reduce power (e.g. for copula-based dependencies). At d = 50, the larger decay (**WD ≈ 4.5**) improves UFDM’s power.
+- In our paper, we used WD = 3.0; small WD (≈0.1–0.3) can substantially reduce power (e.g. for copula-based dependencies). At d = 50, the larger decay (WD ≈ 4.5) improves UFDM’s power.
 - For d > 50 with n = 750, UFDM’s power degrades markedly, indicating a sample-size–to-dimension limitation.
 - UFDM is more data-hungry than DCOR, HSIC, and MEF, and is best suited for (n,d) regimes as in paper's experiments.
 - We also conducted permutation tests with a sample size of n = 375 (under the same configuration as in the paper). The [empirical power table](https://github.com/povidanius/UFDM/blob/main/UFDM_empirical_power_n_375.pdf). 
   
 **Feature extraction:** 
-- smaller decay (**WD = 0.1** - as in published experiments) performs better; large WD tends to over-regularise informative directions. For this task UFDM was effective for larger d (up to 1300).
+- smaller decay (WD = 0.1 - as in published experiments) performs better; large WD tends to over-regularise informative directions. For this task UFDM was effective for larger d (up to 1300).
 
 
 ## Citation
